@@ -2,6 +2,8 @@ plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsKotlinAndroid)
     kotlin("kapt")
+    id ("io.realm.kotlin")
+
 }
 
 android {
@@ -68,14 +70,18 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 
-    val roomVersion = "2.6.1"
-
-    implementation("androidx.room:room-runtime:$roomVersion")
-    implementation("androidx.room:room-ktx:$roomVersion")
-    annotationProcessor("androidx.room:room-compiler:$roomVersion")
-    kapt("androidx.room:room-compiler:$roomVersion")
 
     val navVersion = "2.7.7"
-
     implementation("androidx.navigation:navigation-compose:$navVersion")
+
+
+    implementation ("io.realm.kotlin:library-base:1.11.0")
+    implementation ("io.realm.kotlin:library-sync:1.11.0")// If using Device Sync
+    implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.0")
+
+    implementation("io.insert-koin:koin-core:3.5.3")
+    implementation("io.insert-koin:koin-core-coroutines:3.5.3")
+    implementation("io.insert-koin:koin-android:3.5.3")
+    implementation("io.insert-koin:koin-compose:1.1.2")
+
 }

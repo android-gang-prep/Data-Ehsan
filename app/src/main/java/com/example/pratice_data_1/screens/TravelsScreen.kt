@@ -35,10 +35,11 @@ import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.pratice_data_1.LocalAppState
 import com.example.pratice_data_1.Routes
+import com.example.pratice_data_1.viewModel.TravelsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TravelsScreen(viewModel:TravelsViewModel = viewModel()) {
+fun TravelsScreen(viewModel: TravelsViewModel = viewModel()) {
 
     val travels by viewModel.travels.collectAsState()
     val users by viewModel.users.collectAsState()
@@ -50,15 +51,17 @@ fun TravelsScreen(viewModel:TravelsViewModel = viewModel()) {
 
     val context = LocalContext.current
 
-    if (dialogOpen.value){
+    if (dialogOpen.value) {
         val travelName = remember {
             mutableStateOf("")
         }
         Dialog(onDismissRequest = { dialogOpen.value = false }) {
-            Column(modifier = Modifier
-                .clip(RoundedCornerShape(8.dp))
-                .background(Color.White)
-                .padding(12.dp)) {
+            Column(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(Color.White)
+                    .padding(12.dp)
+            ) {
                 Text(text = "Add Travel", fontSize = 18.sp, fontWeight = FontWeight.Bold)
                 OutlinedTextField(
                     value = travelName.value,
@@ -72,25 +75,35 @@ fun TravelsScreen(viewModel:TravelsViewModel = viewModel()) {
                         viewModel.addTravel(travelName.value)
                         dialogOpen.value = false
                     }
-                }, shape = RoundedCornerShape(8.dp),modifier=Modifier.fillMaxWidth()) {
+                }, shape = RoundedCornerShape(8.dp), modifier = Modifier.fillMaxWidth()) {
                     Text(text = "Add")
                 }
             }
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter){
-        Column(modifier=Modifier.fillMaxSize()) {
-            Text(text = "Your Travels:",modifier=Modifier.fillMaxWidth(), fontSize = 18.sp, fontWeight = FontWeight.Bold)
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            Text(
+                text = "Your Travels:",
+                modifier = Modifier.fillMaxWidth(),
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold
+            )
             Spacer(modifier = Modifier.height(12.dp))
-            LazyColumn(modifier=Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                items(travels){
+            LazyColumn(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(travels) {
                     Card(onClick = {
-                        appState.navController.navigate(Routes.Travel.route+"/${it.id}")
+                        appState.navController.navigate(Routes.Travel.route + "/${it.id}")
                     }) {
-                        Column(modifier = Modifier
-                            .fillMaxSize()
-                            .padding(12.dp)){
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(12.dp)
+                        ) {
                             Text(text = "Travel: ${it.name}")
                             Text(text = "Participants: ${it.users.count()} user")
                         }
@@ -99,12 +112,13 @@ fun TravelsScreen(viewModel:TravelsViewModel = viewModel()) {
             }
         }
         Button(onClick = {
-                         if (users.isEmpty()){
-                             Toast.makeText(context, "First add friends to add new travel", Toast.LENGTH_SHORT).show()
-                         }else{
-                             dialogOpen.value = true
-                         }
-        },modifier=Modifier.fillMaxWidth(), shape = RoundedCornerShape(8.dp)) {
+            if (users.isEmpty()) {
+                Toast.makeText(context, "First add friends to add new travel", Toast.LENGTH_SHORT)
+                    .show()
+            } else {
+                dialogOpen.value = true
+            }
+        }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(8.dp)) {
             Text(text = "Add Travel")
         }
     }

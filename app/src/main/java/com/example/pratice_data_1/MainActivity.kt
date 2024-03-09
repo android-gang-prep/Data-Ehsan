@@ -10,16 +10,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.example.pratice_data_1.db.AppDatabase
 import com.example.pratice_data_1.screens.FriendsScreen
 import com.example.pratice_data_1.screens.HomeScreen
 import com.example.pratice_data_1.screens.LogsScreen
@@ -32,9 +28,8 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        AppDatabase.setup(this)
-
         setContent {
+
             PraticeData1Theme(false) {
                 // A surface container using the 'background' color from the theme
                 Surface(
@@ -81,17 +76,17 @@ class MainActivity : ComponentActivity() {
                             }
                             composable(Routes.Travel.route+"/{id}", arguments = listOf(
                                 navArgument("id"){
-                                    type = NavType.IntType
+                                    type = NavType.StringType
                                 }
                             )){
-                                TravelScreen(travelId = it.arguments?.getInt("id") ?: 0)
+                                TravelScreen(travelId = it.arguments?.getString("id") ?: "0")
                             }
                             composable(Routes.TravelCosts.route+"/{id}", arguments = listOf(
                                 navArgument("id"){
-                                    type = NavType.IntType
+                                    type = NavType.StringType
                                 }
                             )){
-                                TravelCostsScreen(travelId = it.arguments?.getInt("id") ?: 0)
+                                TravelCostsScreen(travelId = it.arguments?.getString("id") ?: "0")
                             }
                             composable(Routes.Friends.route){
                                 FriendsScreen()

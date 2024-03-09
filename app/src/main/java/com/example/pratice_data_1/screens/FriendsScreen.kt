@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.pratice_data_1.viewModel.FriendsViewModel
 
 @Composable
 fun FriendsScreen(viewModel: FriendsViewModel = viewModel()) {

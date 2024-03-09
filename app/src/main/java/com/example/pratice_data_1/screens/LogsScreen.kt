@@ -16,9 +16,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.pratice_data_1.viewModel.LogViewModel
 
 @Composable
-fun LogsScreen(viewModel:LogViewModel = viewModel()) {
+fun LogsScreen(viewModel: LogViewModel = viewModel()) {
 
     val logs by viewModel.logs.collectAsState()
 

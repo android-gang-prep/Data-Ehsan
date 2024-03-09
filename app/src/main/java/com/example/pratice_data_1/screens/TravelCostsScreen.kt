@@ -7,7 +7,6 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -55,15 +54,14 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.pratice_data_1.LocalAppState
-import com.example.pratice_data_1.model.CostUiModel
-import com.example.pratice_data_1.model.UserCostUiModel
+import com.example.pratice_data_1.utils.PriceType
+import com.example.pratice_data_1.viewModel.TravelCostsViewModel
 import java.text.SimpleDateFormat
 import java.util.Calendar
 
-@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TravelCostsScreen(travelId: Int, viewModel: TravelCostsViewModel = viewModel()) {
+fun TravelCostsScreen(travelId: String, viewModel: TravelCostsViewModel = viewModel()) {
 
     val context = LocalContext.current
 
@@ -81,7 +79,7 @@ fun TravelCostsScreen(travelId: Int, viewModel: TravelCostsViewModel = viewModel
         mutableStateOf(false)
     }
     val selectedCost = remember {
-        mutableIntStateOf(0)
+        mutableStateOf("")
     }
 
     val costDialogOpen = remember {
@@ -188,7 +186,7 @@ fun TravelCostsScreen(travelId: Int, viewModel: TravelCostsViewModel = viewModel
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(2.dp)
                     ) {
-                        items(travel?.users ?: emptyList()) {
+                        items(travel?.users?.toList() ?: emptyList()) {
                             Button(onClick = {
                                 viewModel.setPayer(
                                     cost = selectedCost.value,
@@ -306,7 +304,7 @@ fun TravelCostsScreen(travelId: Int, viewModel: TravelCostsViewModel = viewModel
                         if (cost.payer != null && cost.payDate != null) {
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
-                                text = "* ${cost.payer.name} was payed in ${cost.payDate}",
+                                text = "* ${cost.payer?.name} was payed in ${cost.payDate}",
                                 color = Color(
                                     0xFF1F884F
                                 )
@@ -315,7 +313,7 @@ fun TravelCostsScreen(travelId: Int, viewModel: TravelCostsViewModel = viewModel
                         Spacer(modifier = Modifier.height(8.dp))
 
                         cost.userCosts.filter {
-                            it.user.id in (travel?.users?.map { it.id } ?: emptyList())
+                            it.user?.id in (travel?.users?.map { it.id } ?: emptyList())
                         }
                             .forEach {
                                 val expanded = remember {
@@ -351,16 +349,16 @@ fun TravelCostsScreen(travelId: Int, viewModel: TravelCostsViewModel = viewModel
                                                       cost = cost.id,
                                                       newCostForUser = it.copy(
                                                           priceType = when(it.priceType){
-                                                              UserCostUiModel.PRICE_TYPE_IRT->{
-                                                                  UserCostUiModel.PRICE_TYPE_DOLLAR
+                                                              PriceType.PRICE_TYPE_IRT->{
+                                                                  PriceType.PRICE_TYPE_DOLLAR
                                                               }
-                                                              UserCostUiModel.PRICE_TYPE_DOLLAR->{
-                                                                  UserCostUiModel.PRICE_TYPE_EURO
+                                                              PriceType.PRICE_TYPE_DOLLAR->{
+                                                                  PriceType.PRICE_TYPE_EURO
                                                               }
-                                                              UserCostUiModel.PRICE_TYPE_EURO->{
-                                                                  UserCostUiModel.PRICE_TYPE_IRT
+                                                              PriceType.PRICE_TYPE_EURO->{
+                                                                  PriceType.PRICE_TYPE_IRT
                                                               }
-                                                              else->{""}
+                                                              else->{PriceType.PRICE_TYPE_IRT}
                                                           }
                                                       )
                                                   )
@@ -383,7 +381,7 @@ fun TravelCostsScreen(travelId: Int, viewModel: TravelCostsViewModel = viewModel
                                             onClick = {},
                                             shape = RoundedCornerShape(8.dp)
                                         ) {
-                                            Text(text = it.user.name)
+                                            Text(text = it.user?.name.orEmpty())
                                         }
                                         ExposedDropdownMenu(
                                             expanded = expanded.value,
@@ -404,9 +402,7 @@ fun TravelCostsScreen(travelId: Int, viewModel: TravelCostsViewModel = viewModel
                                                         },
                                                         onClick = {
                                                             viewModel.updateCostForUser(
-                                                                newCostForUser = it.copy(
-                                                                    user = user
-                                                                ),
+                                                                newCostForUser = it.copy(user = user),
                                                                 cost = cost.id
                                                             )
                                                             expanded.value = false
