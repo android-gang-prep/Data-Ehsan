@@ -22,7 +22,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 
-@Database(entities = [TravelEntity::class,CostEntity::class,UserCostEntity::class,UserEntity::class,LogEntity::class], version = 2)
+@Database(entities = [TravelEntity::class,CostEntity::class,UserCostEntity::class,UserEntity::class,LogEntity::class], version = 3, exportSchema = true)
 @TypeConverters(value = [ListConverter::class])
 abstract class AppDatabase: RoomDatabase() {
 
