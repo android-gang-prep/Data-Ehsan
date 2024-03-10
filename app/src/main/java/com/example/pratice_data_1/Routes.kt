@@ -5,6 +5,7 @@ enum class Routes(val route:String) {
     Friends(route = "friends"),
     Travels(route = "travels"),
     Travel(route = "travel"),
+    Debts(route = "debts"),
     TravelCosts(route = "travel-costs"),
     Logs(route = "logs")
 }

@@ -16,6 +16,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.example.pratice_data_1.screens.DebtsScreen
 import com.example.pratice_data_1.screens.FriendsScreen
 import com.example.pratice_data_1.screens.HomeScreen
 import com.example.pratice_data_1.screens.LogsScreen
@@ -80,6 +81,13 @@ class MainActivity : ComponentActivity() {
                                 }
                             )){
                                 TravelScreen(travelId = it.arguments?.getString("id") ?: "0")
+                            }
+                            composable(Routes.Debts.route+"/{id}", arguments = listOf(
+                                navArgument("id"){
+                                    type = NavType.StringType
+                                }
+                            )){
+                                DebtsScreen(travelId = it.arguments?.getString("id") ?: "0")
                             }
                             composable(Routes.TravelCosts.route+"/{id}", arguments = listOf(
                                 navArgument("id"){

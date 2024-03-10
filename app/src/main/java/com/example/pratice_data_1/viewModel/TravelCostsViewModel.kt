@@ -2,6 +2,9 @@ package com.example.pratice_data_1.viewModel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.pratice_data_1.db.entities.COST_TYPE_AMOUNT
+import com.example.pratice_data_1.db.entities.COST_TYPE_PERCENT
+import com.example.pratice_data_1.db.entities.COST_TYPE_STOCK
 import com.example.pratice_data_1.db.entities.Cost
 import com.example.pratice_data_1.db.entities.Travel
 import com.example.pratice_data_1.db.entities.User
@@ -74,10 +77,22 @@ class TravelCostsViewModel : ViewModel(), KoinComponent {
         }
     }
 
-    fun addCost(costTitle: String) {
+    fun addCost(costTitle: String, costType: String, costPriceType: String, costAmount: String?) {
         viewModelScope.launch {
             _costs.update {
-                (it ?: emptyList()) + UiCost(title = costTitle)
+                (it ?: emptyList()) + UiCost(
+                    title = costTitle,
+                    costType = costType,
+                    costPriceType = costPriceType,
+                    costAmount = costAmount,
+                    userCosts = travel.value?.users?.map {
+                        UiUserCost(
+                            user = it,
+                            priceType = costPriceType,
+                            amount = if (costType == COST_TYPE_AMOUNT) "0.0" else if (costType == COST_TYPE_STOCK) "1" else (100.0 / (travel.value?.users?.count()
+                                ?: 1)).toString()
+                        )
+                    } ?: emptyList())
             }
             addLog("a cost with $costTitle title added to ${_travel.value?.name} travel")
         }
@@ -100,7 +115,12 @@ class TravelCostsViewModel : ViewModel(), KoinComponent {
                 instance?.let { ins ->
                     val index = ins.indexOf(instance.find { it.id == cost })
                     index.let {
-                        instance[index] = instance[index].copy(userCosts = instance[index].userCosts + UiUserCost(user = user, priceType = PriceType.PRICE_TYPE_IRT))
+                        instance[index] = instance[index].copy(
+                            userCosts = instance[index].userCosts + UiUserCost(
+                                user = user,
+                                priceType = PriceType.PRICE_TYPE_IRT
+                            )
+                        )
                     }
                 }
 
@@ -162,7 +182,8 @@ class TravelCostsViewModel : ViewModel(), KoinComponent {
                     val index = ins.indexOf(instance.find { it.id == cost })
                     index.let {
                         val userCosts = instance[index].userCosts.toMutableList()
-                        instance[index] = instance[index].copy(userCosts = userCosts.filter { it.id != costForUser.id })
+                        instance[index] =
+                            instance[index].copy(userCosts = userCosts.filter { it.id != costForUser.id })
                     }
                 }
 
@@ -171,11 +192,19 @@ class TravelCostsViewModel : ViewModel(), KoinComponent {
         }
     }
 
-    fun saveCosts() {
+    fun saveCosts(onToast: (String) -> Unit): Boolean {
         _costs
             .value
             ?.filter { it.userCosts.isNotEmpty() && it.userCosts.all { it.amount.toDoubleOrNull() != null } }
             .also {
+                it?.forEach {
+                    if (it.costType == COST_TYPE_PERCENT) {
+                        if (it.userCosts.sumOf { it.amount.toDoubleOrNull() ?: 0.0 } != 100.0) {
+                            onToast("Cost ${it.title} percents should be 100")
+                            return false
+                        }
+                    }
+                }
                 val log = if (_costs.value == _travel.value?.costs) {
                     "${_travel.value?.name} travel costs saved with same values"
                 } else {
@@ -183,11 +212,12 @@ class TravelCostsViewModel : ViewModel(), KoinComponent {
                 }
                 it?.let { costs ->
                     updateTravel(
-                        _travel.value!!.copy(costs = costs) ,
+                        _travel.value!!.copy(costs = costs),
                         log = log
                     )
                 }
             }
+        return true
     }
 
 }

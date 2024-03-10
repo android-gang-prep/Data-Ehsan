@@ -54,7 +54,12 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.pratice_data_1.LocalAppState
+import com.example.pratice_data_1.db.entities.COST_TYPE_AMOUNT
+import com.example.pratice_data_1.db.entities.COST_TYPE_PERCENT
+import com.example.pratice_data_1.db.entities.COST_TYPE_STOCK
+import com.example.pratice_data_1.model.nextPriceType
 import com.example.pratice_data_1.utils.PriceType
+import com.example.pratice_data_1.utils.toIRT
 import com.example.pratice_data_1.viewModel.TravelCostsViewModel
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -75,9 +80,6 @@ fun TravelCostsScreen(travelId: String, viewModel: TravelCostsViewModel = viewMo
     val travel by viewModel.travel.collectAsState()
     val users by viewModel.users.collectAsState()
 
-    val userDialogOpen = remember {
-        mutableStateOf(false)
-    }
     val selectedCost = remember {
         mutableStateOf("")
     }
@@ -88,51 +90,20 @@ fun TravelCostsScreen(travelId: String, viewModel: TravelCostsViewModel = viewMo
     val payerDialogOpen = remember {
         mutableStateOf(false)
     }
-
-    if (userDialogOpen.value && travel != null) {
-        Dialog(onDismissRequest = { userDialogOpen.value = false }) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(Color.White)
-                    .padding(12.dp)
-            ) {
-                Column {
-                    users.filter { it.id in travel!!.users.map { it.id } }
-                        .also {
-                            if (it.isEmpty()) {
-                                Text(text = "No Users In This Travel!")
-                            }
-                            it.forEachIndexed { index, user ->
-                                Text(
-                                    text = user.name,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(vertical = 16.dp)
-                                        .clickable {
-                                            viewModel.addCostForUser(
-                                                user = user,
-                                                cost = selectedCost.value
-                                            )
-                                            userDialogOpen.value = false
-                                        },
-                                    fontSize = 18.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    textAlign = TextAlign.Center
-                                )
-                                if (index != users.lastIndex) {
-                                    Divider()
-                                }
-                            }
-                        }
-
-                }
-            }
-        }
-    }
     if (costDialogOpen.value) {
         val costTitle = remember {
+            mutableStateOf("")
+        }
+        val costTypeExpanded = remember {
+            mutableStateOf(false)
+        }
+        val costType = remember {
+            mutableStateOf(COST_TYPE_AMOUNT)
+        }
+        val costPriceType = remember {
+            mutableStateOf(PriceType.PRICE_TYPE_IRT)
+        }
+        val costAmount = remember {
             mutableStateOf("")
         }
         Dialog(onDismissRequest = { costDialogOpen.value = false }) {
@@ -144,16 +115,109 @@ fun TravelCostsScreen(travelId: String, viewModel: TravelCostsViewModel = viewMo
                     .padding(12.dp)
             ) {
                 Column {
-                    Text(text = "Cost Title", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(text = "Cost Title", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                        ExposedDropdownMenuBox(
+                            expanded = costTypeExpanded.value,
+                            onExpandedChange = {
+                                costTypeExpanded.value = it
+                            }) {
+                            Button(
+                                modifier = Modifier
+                                    .menuAnchor()
+                                    .width(100.dp),
+                                onClick = {},
+                                shape = RoundedCornerShape(8.dp)
+                            ) {
+                                Text(text = costType.value)
+                            }
+                            ExposedDropdownMenu(
+                                expanded = costTypeExpanded.value,
+                                onDismissRequest = {
+                                    costTypeExpanded.value = false
+                                }) {
+                                DropdownMenuItem(text = {
+                                    Text(text = COST_TYPE_AMOUNT)
+                                }, onClick = {
+                                    costType.value = COST_TYPE_AMOUNT
+                                    costTypeExpanded.value = false
+                                })
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(text = COST_TYPE_PERCENT)
+                                    },
+                                    onClick = {
+                                        costType.value = COST_TYPE_PERCENT
+                                        costTypeExpanded.value = false
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(text = COST_TYPE_STOCK)
+                                    },
+                                    onClick = {
+                                        costType.value = COST_TYPE_STOCK
+                                        costTypeExpanded.value = false
+                                    }
+                                )
+                            }
+                        }
+                    }
                     Spacer(modifier = Modifier.height(4.dp))
                     OutlinedTextField(
                         value = costTitle.value,
+                        placeholder = {
+                            Text(text = "Title")
+                        },
                         onValueChange = { costTitle.value = it }, modifier = Modifier.fillMaxWidth()
                     )
                     Spacer(modifier = Modifier.height(4.dp))
+                    AnimatedVisibility(visible = costType.value != COST_TYPE_AMOUNT) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            OutlinedTextField(
+                                value = costAmount.value,
+                                placeholder = {
+                                    Text(text = "Total Cost")
+                                },
+                                onValueChange = { costAmount.value = it }, modifier = Modifier
+                                    .fillMaxWidth()
+                                    .weight(1f)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Button(onClick = {
+                                costPriceType.value = nextPriceType(costPriceType.value)
+                            }, shape = RoundedCornerShape(8.dp)) {
+                                Text(text = costPriceType.value)
+                            }
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(4.dp))
                     Button(onClick = {
                         if (costTitle.value.isNotBlank()) {
-                            viewModel.addCost(costTitle.value)
+                            if (costType.value != COST_TYPE_AMOUNT) {
+                                if (costAmount.value.isNotBlank()) {
+                                    viewModel.addCost(
+                                        costTitle.value,
+                                        costType = costType.value,
+                                        costPriceType = costPriceType.value,
+                                        costAmount = costAmount.value
+                                    )
+                                }
+                            } else {
+                                viewModel.addCost(
+                                    costTitle.value,
+                                    costType = costType.value,
+                                    costPriceType = costPriceType.value,
+                                    costAmount = null
+                                )
+                            }
                         }
                         costDialogOpen.value = false
                     }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(8.dp)) {
@@ -256,9 +320,14 @@ fun TravelCostsScreen(travelId: String, viewModel: TravelCostsViewModel = viewMo
                 }
                 Button(
                     onClick = {
-                        viewModel.saveCosts()
-                        Toast.makeText(context, "Costs saved.", Toast.LENGTH_SHORT).show()
-                        appState.navController.popBackStack()
+                        viewModel.saveCosts(onToast = {
+                            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+                        }).also {
+                            if (it){
+                                Toast.makeText(context, "Costs saved.", Toast.LENGTH_SHORT).show()
+                                appState.navController.popBackStack()
+                            }
+                        }
                     }, modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f), shape = RoundedCornerShape(8.dp)
@@ -304,7 +373,7 @@ fun TravelCostsScreen(travelId: String, viewModel: TravelCostsViewModel = viewMo
                         if (cost.payer != null && cost.payDate != null) {
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
-                                text = "* ${cost.payer?.name} was payed in ${cost.payDate}",
+                                text = "* ${cost.payer.name} was payed in ${cost.payDate}",
                                 color = Color(
                                     0xFF1F884F
                                 )
@@ -316,114 +385,71 @@ fun TravelCostsScreen(travelId: String, viewModel: TravelCostsViewModel = viewMo
                             it.user?.id in (travel?.users?.map { it.id } ?: emptyList())
                         }
                             .forEach {
-                                val expanded = remember {
-                                    mutableStateOf(false)
-                                }
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    OutlinedTextField(
-                                        modifier = Modifier.weight(1f),
-                                        value = it.amount,
-                                        onValueChange = { value ->
-                                            viewModel.updateCostForUser(
-                                                newCostForUser = it.copy(amount = value),
-                                                cost = cost.id
-                                            )
-                                        },
-                                        placeholder = {
-                                            Text(text = "Amount")
-                                        },
-                                        keyboardOptions = KeyboardOptions(
-                                            keyboardType = KeyboardType.Decimal
-                                        )
-                                    )
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Button(
-                                        modifier = Modifier
-                                            .width(100.dp),
-                                        onClick = {
-                                                  viewModel.updateCostForUser(
-                                                      cost = cost.id,
-                                                      newCostForUser = it.copy(
-                                                          priceType = when(it.priceType){
-                                                              PriceType.PRICE_TYPE_IRT->{
-                                                                  PriceType.PRICE_TYPE_DOLLAR
-                                                              }
-                                                              PriceType.PRICE_TYPE_DOLLAR->{
-                                                                  PriceType.PRICE_TYPE_EURO
-                                                              }
-                                                              PriceType.PRICE_TYPE_EURO->{
-                                                                  PriceType.PRICE_TYPE_IRT
-                                                              }
-                                                              else->{PriceType.PRICE_TYPE_IRT}
-                                                          }
-                                                      )
-                                                  )
-                                        },
-                                        shape = RoundedCornerShape(8.dp)
+                                Column {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
-                                        Text(text = it.priceType)
-                                    }
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    ExposedDropdownMenuBox(
-                                        modifier = Modifier,
-                                        expanded = expanded.value,
-                                        onExpandedChange = {
-                                            expanded.value = it
-                                        }) {
+                                        OutlinedTextField(
+                                            modifier = Modifier.weight(1f),
+                                            value = it.amount,
+                                            onValueChange = { value ->
+                                                viewModel.updateCostForUser(
+                                                    newCostForUser = it.copy(amount = value),
+                                                    cost = cost.id
+                                                )
+                                            },
+                                            placeholder = {
+                                                Text(text = if (cost.costType == COST_TYPE_AMOUNT) "Amount" else if (cost.costType == COST_TYPE_PERCENT) "Percent" else "Stock")
+                                            },
+                                            keyboardOptions = KeyboardOptions(
+                                                keyboardType = KeyboardType.Decimal
+                                            )
+                                        )
+                                        if (cost.costType == COST_TYPE_AMOUNT){
+                                            Spacer(modifier = Modifier.width(4.dp))
+                                            Button(
+                                                modifier = Modifier
+                                                    .width(100.dp),
+                                                onClick = {
+                                                    viewModel.updateCostForUser(
+                                                        cost = cost.id,
+                                                        newCostForUser = it.copy(
+                                                            priceType = nextPriceType(it.priceType)
+                                                        )
+                                                    )
+                                                },
+                                                shape = RoundedCornerShape(8.dp)
+                                            ) {
+                                                Text(text = it.priceType)
+                                            }
+                                        }
+                                        Spacer(modifier = Modifier.width(4.dp))
                                         Button(
                                             modifier = Modifier
-                                                .menuAnchor()
                                                 .width(100.dp),
                                             onClick = {},
                                             shape = RoundedCornerShape(8.dp)
                                         ) {
                                             Text(text = it.user?.name.orEmpty())
                                         }
-                                        ExposedDropdownMenu(
-                                            expanded = expanded.value,
-                                            onDismissRequest = {
-                                                expanded.value = false
-                                            }) {
-                                            users.filter {
-                                                it.id in (travel?.users?.map { it.id }
-                                                    ?: emptyList())
-                                            }
-                                                .forEach { user ->
-                                                    DropdownMenuItem(
-                                                        modifier = Modifier.width(
-                                                            100.dp
-                                                        ),
-                                                        text = {
-                                                            Text(text = user.name)
-                                                        },
-                                                        onClick = {
-                                                            viewModel.updateCostForUser(
-                                                                newCostForUser = it.copy(user = user),
-                                                                cost = cost.id
-                                                            )
-                                                            expanded.value = false
-                                                        })
-                                                }
-                                        }
                                     }
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    IconButton(onClick = {
-                                        viewModel.deleteCostForUser(
-                                            costForUser = it,
-                                            cost = cost.id
-                                        )
-                                    }) {
-                                        Icon(
-                                            imageVector = Icons.Rounded.Clear,
-                                            contentDescription = null,
-                                        )
+                                    if (cost.costType != COST_TYPE_AMOUNT){
+                                        val valueForUser = if (cost.costType == COST_TYPE_STOCK){
+                                            //stock
+                                            val sumOfStocks = cost.userCosts.sumOf { it.amount.toDoubleOrNull() ?: 0.0 }
+                                            println("sum of stucs: $sumOfStocks")
+                                            ((cost.costAmount?.toDoubleOrNull() ?: 0.0) * (it.amount.toDoubleOrNull() ?: 0.0))/sumOfStocks
+                                        }else{
+                                            //percent
+                                            ((cost.costAmount?.toDoubleOrNull() ?: 0.0) * (it.amount.toDoubleOrNull() ?: 0.0))/100
+                                        }.toIRT(cost.costPriceType)
+                                        Text(text = "$valueForUser IRT")
                                     }
+
                                 }
-                                Spacer(modifier = Modifier.height(8.dp))
+                                Spacer(modifier = Modifier.height(12.dp))
                             }
                         Spacer(modifier = Modifier.height(8.dp))
                         Button(
@@ -436,18 +462,6 @@ fun TravelCostsScreen(travelId: String, viewModel: TravelCostsViewModel = viewMo
                         ) {
                             Text(text = "Set payer")
                         }
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Button(
-                            onClick = {
-                                selectedCost.value = cost.id
-                                userDialogOpen.value = true
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(8.dp)
-                        ) {
-                            Text(text = "Add cost for user")
-                        }
-
                         Divider()
                     }
                 }

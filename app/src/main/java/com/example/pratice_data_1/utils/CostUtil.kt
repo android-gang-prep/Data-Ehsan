@@ -17,15 +17,18 @@ class PriceType{
 
 fun UiUserCost.toIRT():Double{
     val doubleAmount = amount.toDoubleOrNull() ?: 0.0
+    return doubleAmount.toIRT(priceType)
+}
+fun Double.toIRT(priceType:String):Double{
     return when(priceType){
         PriceType.PRICE_TYPE_DOLLAR->{
-            doubleAmount * PriceType.IRT_PER_DOLLAR
+            this * PriceType.IRT_PER_DOLLAR
         }
         PriceType.PRICE_TYPE_EURO->{
-            doubleAmount * PriceType.IRT_PER_EURO
+            this * PriceType.IRT_PER_EURO
         }
         else->{
-            doubleAmount
+            this
         }
     }
 }

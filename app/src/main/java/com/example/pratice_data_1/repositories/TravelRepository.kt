@@ -32,6 +32,7 @@ class TravelRepository(private val realm: Realm) {
             findLatest(liveTravel)?.let {
                 it.users = travel.toEntity().users
                 it.costs = travel.toEntity().costs
+                it.debts = travel.toEntity().debts
             }
         }
     }

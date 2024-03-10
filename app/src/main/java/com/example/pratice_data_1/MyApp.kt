@@ -2,6 +2,7 @@ package com.example.pratice_data_1
 
 import android.app.Application
 import com.example.pratice_data_1.db.entities.Cost
+import com.example.pratice_data_1.db.entities.Debt
 import com.example.pratice_data_1.db.entities.Log
 import com.example.pratice_data_1.db.entities.Travel
 import com.example.pratice_data_1.db.entities.User
@@ -30,13 +31,16 @@ class MyApp: Application() {
                             Travel::class,
                             Cost::class,
                             UserCost::class,
-                            Log::class
+                            Log::class,
+                            Debt::class
                         )
                     ).name(name = "app_db")
                         .schemaVersion(schemaVersion = 1)
+                        .deleteRealmIfMigrationNeeded()
                         .build()
                 }
                 single {
+                    Realm.compactRealm(get())
                     Realm.open(get())
                 }
 

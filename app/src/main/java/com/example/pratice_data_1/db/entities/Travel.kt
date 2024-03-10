@@ -14,13 +14,15 @@ class Travel:RealmObject{
     var name:String = ""
     var users:RealmList<User> = realmListOf()
     var costs:RealmList<Cost> = realmListOf()
+    var debts:RealmList<Debt> = realmListOf()
 
     fun toUiModel():UiTravel{
         return UiTravel(
             id = id,
             name = name,
             users = users.map { it.toUiModel() },
-            costs = costs.map { it.toUiModel() }
+            costs = costs.map { it.toUiModel() },
+            debts = debts.map { it.toUiModel() }
         )
     }
 }
